@@ -1,7 +1,6 @@
 package loadavg
 
 import (
-	"errors"
 	"sync"
 	"time"
 )
@@ -26,14 +25,16 @@ type LoadAvg struct {
 //----------------------------------------------------------------------------------------------------------------------------//
 
 // Init --
-func Init(period int) (*LoadAvg, error) {
-	if period <= 0 || period > MaxPeriod {
-		return nil, errors.New("Bad period")
+func Init(period int) (me *LoadAvg, err error) {
+	if period <= 0 {
+		period = 60
+	} else if period > MaxPeriod {
+		period = MaxPeriod
 	}
 
 	period++ // +1 - не учитываем текущую секунду
 
-	me := &LoadAvg{
+	me = &LoadAvg{
 		mutex:    new(sync.Mutex),
 		cycled:   false,
 		size:     period,
@@ -41,7 +42,8 @@ func Init(period int) (*LoadAvg, error) {
 		lastTime: time.Now().UTC().Unix(),
 		cache:    make([]float64, period),
 	}
-	return me, nil
+
+	return
 }
 
 //----------------------------------------------------------------------------------------------------------------------------//
