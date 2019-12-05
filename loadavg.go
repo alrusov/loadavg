@@ -25,7 +25,7 @@ type LoadAvg struct {
 //----------------------------------------------------------------------------------------------------------------------------//
 
 // Init --
-func Init(period int) (me *LoadAvg, err error) {
+func Init(period int) (me *LoadAvg) {
 	if period <= 0 {
 		period = 60
 	} else if period > MaxPeriod {
