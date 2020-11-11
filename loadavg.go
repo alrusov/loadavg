@@ -14,12 +14,13 @@ const (
 
 // LoadAvg --
 type LoadAvg struct {
-	mutex    *sync.Mutex
-	cycled   bool
-	size     int
-	idx      int
-	lastTime int64
-	cache    []float64
+	mutex      *sync.Mutex
+	firstCycle bool
+	size       int
+	idx        int
+	lastTime   int64
+	cache      []float64
+	count      []int
 }
 
 //----------------------------------------------------------------------------------------------------------------------------//
@@ -35,12 +36,13 @@ func Init(period int) (me *LoadAvg) {
 	period++ // +1 - не учитываем текущую секунду
 
 	me = &LoadAvg{
-		mutex:    new(sync.Mutex),
-		cycled:   false,
-		size:     period,
-		idx:      0,
-		lastTime: time.Now().UTC().Unix(),
-		cache:    make([]float64, period),
+		mutex:      new(sync.Mutex),
+		firstCycle: true,
+		size:       period,
+		idx:        0,
+		lastTime:   time.Now().UTC().Unix(),
+		cache:      make([]float64, period),
+		count:      make([]int, period),
 	}
 
 	return
@@ -56,40 +58,50 @@ func (me *LoadAvg) Add(v float64) {
 	me.setTime()
 
 	me.cache[me.idx] += v
+	me.count[me.idx]++
 }
 
 //----------------------------------------------------------------------------------------------------------------------------//
 
 // Value --
 func (me *LoadAvg) Value() float64 {
+	return me.value(false)
+}
+
+// AbsValue --
+func (me *LoadAvg) AbsValue() float64 {
+	return me.value(true)
+}
+
+// value --
+func (me *LoadAvg) value(isAbs bool) float64 {
 	me.mutex.Lock()
 	defer me.mutex.Unlock()
 
 	me.setTime()
 
-	if !me.cycled && me.idx == 0 {
+	if me.firstCycle && me.idx == 0 {
 		return 0.
 	}
 
 	v := float64(0)
-	n := me.idx
+	n := 0
 
-	i := 0
-	barrier := me.idx
-	for i < barrier {
-		v += me.cache[i]
-		i++
-	}
-
-	if me.cycled {
-		n = me.size - 1
-
-		i++
-		barrier = me.size
-		for i < barrier {
-			v += me.cache[i]
-			i++
+	for i := 0; i < me.size; i++ {
+		if i == me.idx {
+			if me.firstCycle {
+				break
+			}
+			continue
 		}
+
+		if isAbs {
+			n += me.count[i]
+		} else {
+			n++
+		}
+
+		v += me.cache[i]
 	}
 
 	if n == 0 {
@@ -109,16 +121,18 @@ func (me *LoadAvg) setTime() {
 		me.lastTime = t
 		if diff >= int64(me.size) {
 			me.cache = make([]float64, me.size)
-			me.cycled = true
+			me.count = make([]int, me.size)
+			me.firstCycle = false
 		} else {
 			for diff > 0 {
 				diff--
 				me.idx++
 				if me.idx == me.size {
 					me.idx = 0
-					me.cycled = true
+					me.firstCycle = false
 				}
 				me.cache[me.idx] = 0
+				me.count[me.idx] = 0
 			}
 		}
 	}
