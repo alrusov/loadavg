@@ -26,7 +26,9 @@ type LoadAvg struct {
 //----------------------------------------------------------------------------------------------------------------------------//
 
 // Init --
-func Init(period int) (me *LoadAvg) {
+func Init(duration time.Duration) (me *LoadAvg) {
+	period := int(duration / time.Second)
+
 	if period <= 0 {
 		period = 60
 	} else if period > MaxPeriod {
