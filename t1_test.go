@@ -14,13 +14,13 @@ func Test1(t *testing.T) {
 
 	v := la.Value()
 	if v != 0. {
-		t.Errorf(`4: Value(): expect 0., got %f`, v)
+		t.Errorf(`4: Value(): expected 0., got %f`, v)
 	}
 
 	time.Sleep(1000 * time.Millisecond)
 	v = la.Value()
 	if v == 0. { // кривовато
-		t.Errorf(`5: Value(): expect 1., got %f`, v)
+		t.Errorf(`5: Value(): expected 1., got %f`, v)
 	}
 
 	for i := 1; i < 5; i++ {
@@ -30,7 +30,7 @@ func Test1(t *testing.T) {
 
 	v = la.Value()
 	if v == 0. { // кривовато
-		t.Errorf(`6: Value(): expect 2., got %f`, v)
+		t.Errorf(`6: Value(): expected 2., got %f`, v)
 	}
 }
 
