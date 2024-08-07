@@ -14,7 +14,7 @@ const (
 
 // LoadAvg --
 type LoadAvg struct {
-	mutex      *sync.Mutex
+	sync.Mutex
 	firstCycle bool
 	size       int
 	idx        int
@@ -38,7 +38,6 @@ func Init(duration time.Duration) (me *LoadAvg) {
 	period++ // +1 - не учитываем текущую секунду
 
 	me = &LoadAvg{
-		mutex:      new(sync.Mutex),
 		firstCycle: true,
 		size:       period,
 		idx:        0,
@@ -54,8 +53,8 @@ func Init(duration time.Duration) (me *LoadAvg) {
 
 // Add --
 func (me *LoadAvg) Add(v float64) {
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	me.Lock()
+	defer me.Unlock()
 
 	me.setTime()
 
@@ -77,8 +76,8 @@ func (me *LoadAvg) AbsValue() float64 {
 
 // value --
 func (me *LoadAvg) value(isAbs bool) float64 {
-	me.mutex.Lock()
-	defer me.mutex.Unlock()
+	me.Lock()
+	defer me.Unlock()
 
 	me.setTime()
 
